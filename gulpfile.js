@@ -29,8 +29,6 @@ gulp.task('clean', () => {
 
 });
 
-
-
 //FICA OUVINDO ALTERAÇÕES NOS ARQUIVOS .ts dentro do src e executa o build
 gulp.task('watch', ['scripts'], () => {
     return gulp.watch(['src/**/*.ts', 'src/**/*.json'], ['scripts']);
