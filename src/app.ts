@@ -3,17 +3,17 @@ import * as graphqlHTTP from 'express-graphql';
 import schema from './graphql/schema';
 class App {
     public express: express.Application;
-    nodeEnv = process.env.NODE_ENV;
+    env = process.env.NODE_ENV.toLowerCase().trim();
 
     constructor() {
         this.express = express();
         this.middleware();
     }
 
-    private middleware(): void {      
+    private middleware(): void {
         this.express.use('/graphql', graphqlHTTP({
             schema: schema,
-            graphiql: this.nodeEnv != 'production'
+            graphiql: this.env === 'development'
         }))
     }
 }
