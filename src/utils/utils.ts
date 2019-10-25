@@ -2,7 +2,7 @@ import { Server } from "http";
 
 export const normalizePort = (val: number | string): number => {
     return (typeof val === 'string') ? parseInt(val) : val;
-}
+};
 
 export const onError = (server: Server) => {
     return (error: NodeJS.ErrnoException): void => {
@@ -22,7 +22,7 @@ export const onError = (server: Server) => {
                 throw error;
         }
     }
-}
+};
 
 export const onListening = (server: Server) => {
     return (): void => {
@@ -30,7 +30,7 @@ export const onListening = (server: Server) => {
         let bind = (typeof addr === 'string') ? `pipe ${addr}` : `http://${addr.address}:${addr.port}`;
         console.log(`Listening at ${bind}...`);
     }
-}
+};
 
 export const handleError = (error: Error) => {
     let errorMessage: string = `${error.name}: ${error.message}`;
