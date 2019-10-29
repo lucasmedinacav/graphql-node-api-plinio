@@ -1,14 +1,24 @@
 import * as express from 'express';
 import * as graphqlHTTP from 'express-graphql';
+import { DataLoaderFactory } from './graphql/dataloaders/DataLoaderFactory';
 import schema from './graphql/schema';
-import db from './models'
 import { extractJwtMiddleware } from './middlewares/extract-jwt-middleware';
+import db from './models';
+import { RequestedFields } from './graphql/ast/RequestedFields';
 class App {
+
     public express: express.Application;
-    env = process.env.NODE_ENV.toLowerCase().trim();
+    private dataLoaderFactory: DataLoaderFactory;
+    private requestedFields: RequestedFields;
 
     constructor() {
         this.express = express();
+        this.init();
+    }
+
+    private init(): void {
+        this.requestedFields = new RequestedFields();
+        this.dataLoaderFactory = new DataLoaderFactory(db, this.requestedFields);
         this.middleware();
     }
 
@@ -18,13 +28,15 @@ class App {
             extractJwtMiddleware(),
 
             (req, res, next) => {
-                req['context'].db = db;
+                req['context']['db'] = db;
+                req['context']['dataloaders'] = this.dataLoaderFactory.getLoaders();
+                req['context']['requestedFields'] = this.requestedFields;
                 next();
             },
 
             graphqlHTTP((req) => ({
                 schema: schema,
-                graphiql: this.env === 'development',
+                graphiql: process.env.NODE_ENV.toLowerCase().trim() === 'development',
                 context: req['context']
             }))
         );

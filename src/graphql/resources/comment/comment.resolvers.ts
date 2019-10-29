@@ -1,37 +1,38 @@
 
 import { GraphQLResolveInfo } from 'graphql';
 import { Transaction } from 'sequelize';
-import { DbConnection } from './../../../interfaces/DbConnectionInterface';
 import { CommentInstance } from '../../../models/CommentModel';
 import { handleError } from '../../../utils/utils';
-import { throwError } from './../../../utils/utils';
+import { authResolvers } from '../../composable/auth.resolver';
 import { compose } from '../../composable/composable.resolver';
 import { AuthUser } from './../../../interfaces/AuthUserInterface';
-import { authResolvers } from '../../composable/auth.resolver';
+import { DataLoaders } from './../../../interfaces/DataLoaderInterface';
+import { DbConnection } from './../../../interfaces/DbConnectionInterface';
+import { throwError } from './../../../utils/utils';
+import { RequestedFields } from './../../ast/RequestedFields';
 
 export const commentResolvers = {
 
     Comment: {
-        user: (comment, args, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-            return db.User
-                .findById(comment.get('user'))
+        user: (comment, args, { dataLoaders: { userLoader } }: { dataLoaders: DataLoaders }, info: GraphQLResolveInfo) => {
+            return userLoader.load({ key: comment.get('user'), info })
                 .catch(handleError);
         },
-        post: (comment, args, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
-            return db.Post
-                .findById(comment.get('user'))
+        post: (comment, args, { dataLoaders: { postLoader } }: { dataLoaders: DataLoaders }, info: GraphQLResolveInfo) => {
+            return postLoader.load({ key: comment.get('post'), info })
                 .catch(handleError);
         }
     },
 
     Query: {
-        commentsByPosts: (parent, { postId, first = 10, offset = 0 }, { db }: { db: DbConnection }, info: GraphQLResolveInfo) => {
+        commentsByPosts: (parent, { postId, first = 10, offset = 0 }, { db, requestedFields }: { db: DbConnection, requestedFields: RequestedFields }, info: GraphQLResolveInfo) => {
             postId = parseInt(postId);
             return db.Comment
                 .findAll({
                     where: { post: postId },
                     limit: first,
-                    offset: offset
+                    offset: offset,
+                    attributes: requestedFields.getFields(info)
                 })
                 .catch(handleError);
         }
